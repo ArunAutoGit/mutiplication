@@ -1,258 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Pencil-on-Paper Multiplication Tutor — Voice & Table Highlight</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<style>
-:root {
-  --bg:#f0f4f8; --accent:#3b82f6; --accent-light:#dbeafe;
-  --carry:#ef4444; --highlight:#fde68a; --success:#34d399;
-  --table-bg:#ffffff; --border-light:#e5e7eb;
-  --text-dark:#111827; --text-muted:#6b7280;
-}
-body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text-dark); }
-#container { display:flex; width:100%; height:100vh; }
-#left,#right { padding:20px; box-sizing:border-box; }
-#left { width:70%; overflow-y:auto; }
-#right { width:30%; overflow-y:auto; background:var(--table-bg); border-left:2px solid var(--border-light); box-shadow:-2px 0 8px rgba(0,0,0,0.05); border-radius:0 12px 12px 0; }
-h1 { margin-bottom:10px; font-size:24px; text-align:center; color:var(--accent); }
-p.lead { margin-bottom:20px; text-align:center; color:var(--text-muted); font-size:16px; }
-#ui { text-align:center; margin-bottom:20px; }
-#ui input[type=number] {
-  font-size:16px; width:100px; padding:6px 8px; margin:0 6px; border-radius:12px; border:1px solid var(--border-light); outline:none;
-  transition:border 0.2s,box-shadow 0.2s;
-}
-#ui input[type=number]:focus { border-color:var(--accent); box-shadow:0 0 5px var(--accent-light); }
-button {
-  padding:10px 16px; margin:6px 4px; font-size:16px; border-radius:12px; border:none; background:var(--accent); color:white; cursor:pointer;
-  transition:background 0.2s,transform 0.1s,box-shadow 0.2s;
-}
-button:hover:not(:disabled) { background:#2563eb; transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-button:disabled { background:#d1d5db; cursor:not-allowed; }
-#overlayWrap { position:relative; width:fit-content; margin:20px auto; background:var(--table-bg); padding:16px; border-radius:16px; box-shadow:0 10px 20px rgba(0,0,0,0.12); }
-table.tutor { margin:0 auto; border-collapse:collapse; font-size:22px; background:var(--table-bg); border-radius:16px; overflow:hidden;
-  box-shadow:0 8px 20px rgba(0,0,0,0.12),0 4px 10px rgba(0,0,0,0.08); }
-table.tutor td { width:50px; height:50px; text-align:center; border:1px solid var(--border-light); vertical-align:middle; position:relative; font-weight:500; font-size:18px;
-  background:linear-gradient(145deg,#ffffff,#f3f6fc); border-radius:6px; transition:all 0.2s ease; }
-table.tutor td input { width:100%; height:100%; font-size:18px; text-align:center; border:none; outline:none; background:transparent; font-weight:600; }
-.carry { font-size:12px; color:var(--carry); position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-weight:700; background:var(--accent-light); padding:2px 6px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.12); }
-.highlight { background:var(--highlight) !important; }
-.correct { background:var(--success) !important; color:#065f46; }
-.finalCarry { background:#bbf7d0 !important; color:#065f46; }
-.activeDigit { background:var(--highlight) !important; font-weight:700; }
-#explanation { text-align:center; min-height:24px; font-weight:700; color:var(--carry); font-size:16px; opacity:0; transition:opacity 0.3s; margin-top:12px; }
-#tableDisplay h2 { margin-bottom:10px; font-size:20px; text-align:center; color:var(--accent); }
-#multTableDisplay { padding:12px; border-top:1px solid var(--border-light); border-radius:12px; }
-#multTableDisplay table { width:100%; border-collapse:collapse; font-size:16px; }
-#multTableDisplay td { padding:10px; border-bottom:1px solid var(--border-light); }
-#multTableDisplay tr.flash { background:var(--highlight); transition:background 0.35s ease; }
-#multTableDisplay tr:nth-child(even) { background:#f9fafc; }
-#arrowSvg { position:absolute; top:0; left:0; pointer-events:none; overflow:visible; z-index:10; }
-.animatedCarryBubble { position:absolute; pointer-events:none; border-radius:10px; padding:3px 8px; font-weight:700; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,0.15); background:#fff; color:#ef4444; }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pencil-on-Paper Multiplication Tutor — Responsive</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg:#f0f4f8; --accent:#3b82f6; --accent-light:#dbeafe;
+      --carry:#ef4444; --highlight:#fde68a; --success:#34d399;
+      --table-bg:#ffffff; --border-light:#e5e7eb;
+      --text-dark:#111827; --text-muted:#6b7280;
+    }
+    body {
+      font-family:'Segoe UI',Tahoma,sans-serif;
+      margin:0; padding:0;
+      background:var(--bg); color:var(--text-dark);
+    }
+    #container {
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+      gap:16px;
+    }
+    #left,#right {
+      padding:16px;
+      box-sizing:border-box;
+    }
+    #right {
+      background:var(--table-bg);
+      border-top:2px solid var(--border-light);
+      box-shadow:0 -2px 8px rgba(0,0,0,0.05);
+      border-radius:12px 12px 0 0;
+    }
+    h1 {
+      margin-bottom:10px;
+      font-size:clamp(20px, 5vw, 28px);
+      text-align:center; color:var(--accent);
+    }
+    p.lead {
+      margin-bottom:20px;
+      text-align:center;
+      color:var(--text-muted);
+      font-size:clamp(14px, 3.5vw, 16px);
+    }
+    #ui {
+      text-align:center;
+      margin-bottom:20px;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+    }
+    #ui label {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      font-size:clamp(12px,3.5vw,14px);
+    }
+    #ui input[type=number] {
+      font-size:clamp(14px, 3vw, 16px);
+      width:100px; padding:6px 8px;
+      border-radius:10px;
+      border:1px solid var(--border-light);
+      outline:none;
+    }
+    #ui input[type=number]:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 5px var(--accent-light);
+    }
+    button {
+      padding:8px 14px;
+      font-size:clamp(14px, 3vw, 16px);
+      border-radius:12px;
+      border:none;
+      background:var(--accent);
+      color:white;
+      cursor:pointer;
+      flex:1;
+      min-width:100px;
+    }
+    button:hover:not(:disabled) {
+      background:#2563eb;
+    }
+    button:disabled {
+      background:#d1d5db; cursor:not-allowed;
+    }
+    #overlayWrap {
+      position:relative;
+      width:100%;
+      margin:20px auto;
+      background:var(--table-bg);
+      padding:12px;
+      border-radius:16px;
+      box-shadow:0 10px 20px rgba(0,0,0,0.12);
+      overflow-x:auto;
+    }
+    table.tutor {
+      margin:0 auto;
+      border-collapse:collapse;
+      font-size:clamp(14px, 3vw, 18px);
+    }
+    table.tutor td {
+      width:40px; height:40px;
+      text-align:center;
+      border:1px solid var(--border-light);
+    }
+    table.tutor td input {
+      width:100%; height:100%;
+      font-size:inherit;
+      text-align:center;
+      border:none; background:transparent;
+    }
+    #right {
+      max-height:400px;
+      overflow-y:auto;
+    }
+    #tableDisplay h2 {
+      margin-bottom:10px;
+      font-size:clamp(16px, 4vw, 20px);
+      text-align:center;
+      color:var(--accent);
+    }
+    /* Responsive: two-column layout on larger screens */
+    @media(min-width:768px){
+      #container { flex-direction:row; }
+      #left { flex:0 0 70%; }
+      #right { flex:0 0 30%; border-top:none; border-left:2px solid var(--border-light); border-radius:0 12px 12px 0; }
+    }
+  </style>
 </head>
 <body>
-<div id="container">
-  <div id="left">
-    <h1>Pencil-on-Paper Multiplication Tutor</h1>
-    <p class="lead">Step-by-step animations, carries, and spoken explanations for kids.</p>
-    <div id="ui">
-      Multiplicand: <input type="number" id="multiplicandInput" value="455"/>
-      Multiplier: <input type="number" id="multiplierInput" value="52"/>
-      <button id="startBtn">Start</button>
-      <button id="nextStepBtn">Next Step</button>
-      <button id="autoPlayBtn">Auto Play</button>
+  <div id="container">
+    <div id="left">
+      <h1>Pencil-on-Paper Multiplication Tutor</h1>
+      <p class="lead">Step-by-step animations, carries, and spoken explanations for kids.</p>
+      <div id="ui">
+        <label>Multiplicand <input type="number" id="multiplicandInput" value="455"/></label>
+        <label>Multiplier <input type="number" id="multiplierInput" value="52"/></label>
+        <button id="startBtn">Start</button>
+        <button id="nextStepBtn">Next Step</button>
+        <button id="autoPlayBtn">Auto Play</button>
+      </div>
+      <div id="overlayWrap">
+        <div id="table-container"></div>
+        <svg id="arrowSvg"></svg>
+      </div>
+      <div id="explanation"></div>
     </div>
-    <div id="overlayWrap">
-      <div id="table-container"></div>
-      <svg id="arrowSvg"></svg>
-    </div>
-    <div id="explanation"></div>
-  </div>
-  <div id="right">
-    <div id="tableDisplay">
-      <h2>Multiplication Table</h2>
-      <p style="text-align:center;margin:6px 0 12px;color:#666;font-size:13px">
-        The currently used digit's times table will show here and flash the exact fact when used.
-      </p>
-      <div id="multTableDisplay">
-        <p style="text-align:center;color:#999">Press <strong>Start</strong> to begin.</p>
+    <div id="right">
+      <div id="tableDisplay">
+        <h2>Multiplication Table</h2>
+        <p style="text-align:center;margin:6px 0 12px;color:#666;font-size:13px">
+          The currently used digit's times table will show here and flash the exact fact when used.
+        </p>
+        <div id="multTableDisplay">
+          <p style="text-align:center;color:#999">Press <strong>Start</strong> to begin.</p>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- Scripts (at end for better performance) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script>
 /* ======= Utilities ======= */
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const ding = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
-const playDing = () => { try { ding.currentTime=0; ding.play(); } catch(e){} };
-const speak = text => { 
+const playDing = () => { try { ding.currentTime = 0; ding.play(); } catch (e) {} };
+const speak = text => {
   if (!window.speechSynthesis) return;
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang='en-US'; utter.rate=0.95; utter.pitch=1.0;
+  utter.lang = 'en-US'; utter.rate = 0.95; utter.pitch = 1.0;
   window.speechSynthesis.cancel(); window.speechSynthesis.speak(utter);
 };
-const showExplanation = (text, duration=1200) => {
+const showExplanation = (text, duration = 1200) => {
   const el = document.getElementById('explanation');
-  el.textContent = text; el.style.opacity=1;
-  if(duration>0) setTimeout(()=>el.style.opacity=0, duration);
+  if (!el) return;
+  el.textContent = text; el.style.opacity = 1;
+  if (duration > 0) setTimeout(() => el.style.opacity = 0, duration);
 };
 
 /* ======= Table Builder ======= */
-let multiplicand=0, multiplier=0, cols=0;
+let multiplicand = 0, multiplier = 0, cols = 0;
 
-const buildTable = (a,b) => {
-  multiplicand=+a; multiplier=+b;
+const buildTable = (a, b) => {
+  multiplicand = +a; multiplier = +b;
   const A = String(a).split(''), B = String(b).split('');
   cols = A.length + B.length;
 
-  const createRow = (arr, offset=0) => '<td></td>'.repeat(offset) + arr.map(c=>`<td>${c}</td>`).join('');
+  const createRow = (arr, offset = 0) => '<td></td>'.repeat(offset) + arr.map(c => `<td>${c}</td>`).join('');
   let html = `<table class="tutor" id="multTable">
     <tr id="carryRow">${'<td><div class="carry" style="top:2px;"></div></td>'.repeat(cols)}</tr>
-    <tr id="multiplicandRow">${createRow(A, cols-A.length)}</tr>
-    <tr id="multiplierRow">${createRow(['×',...B], cols-B.length-1)}</tr>`;
-  B.forEach((_,i) => html += `<tr class="partialRow" id="partial${i}">${'<td><input maxlength="1"/></td>'.repeat(cols)}</tr>`);
+    <tr id="multiplicandRow">${createRow(A, cols - A.length)}</tr>
+    <tr id="multiplierRow">${createRow(['×', ...B], cols - B.length - 1)}</tr>`;
+  B.forEach((_, i) => html += `<tr class="partialRow" id="partial${i}">${'<td><input maxlength="1"/></td>'.repeat(cols)}</tr>`);
   html += `<tr><td colspan="${cols}"><hr/></td></tr>
     <tr id="resultRow">${'<td><input maxlength="1"/></td>'.repeat(cols)}</tr>
   </table>`;
 
   document.getElementById('table-container').innerHTML = html;
-  refreshOverlaySize();
+  // give browsers a tiny moment to render before measuring
+  requestAnimationFrame(refreshOverlaySize);
 };
 
-/* ======= Overlay & Geometry ======= */
+/* ======= Overlay & Geometry (refactored) ======= */
 const refreshOverlaySize = () => {
-  const table = document.getElementById('multTable'); if(!table) return;
-  const r = table.getBoundingClientRect(), svg = document.getElementById('arrowSvg');
-  svg.setAttribute('width', r.width); svg.setAttribute('height', r.height);
-  svg.style.width = r.width+'px'; svg.style.height = r.height+'px';
+  const svg = document.getElementById('arrowSvg');
+  const overlay = document.getElementById('overlayWrap');
+  if (!svg || !overlay) return;
+
+  // Ensure the svg is absolutely positioned over the overlay's visible area
+  svg.style.position = 'absolute';
+  svg.style.top = '0px';
+  svg.style.left = '0px';
+  svg.style.pointerEvents = 'none';
+  svg.style.overflow = 'visible';
+  svg.style.zIndex = 999;
+
+  // Set svg dimensions equal to overlay's client (visible) size
+  const w = Math.max(overlay.clientWidth, 100);
+  const h = Math.max(overlay.clientHeight, 100);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.style.width = w + 'px';
+  svg.style.height = h + 'px';
 };
 
+/**
+ * Return position (x,y) in SVG coordinate space for the center of a cell.
+ * Uses element.getBoundingClientRect() - svg.getBoundingClientRect() to translate coordinates.
+ */
 const getCellCenter = (rowSelector, colIndex) => {
-  const td=document.querySelector(`${rowSelector} td:nth-child(${colIndex+1})`);
-  if(!td) return {x:0,y:0};
-  const rc=td.getBoundingClientRect(), tableRect=document.getElementById('multTable').getBoundingClientRect();
-  return {x:(rc.left-tableRect.left)+rc.width/2, y:(rc.top-tableRect.top)+rc.height/2};
+  const td = document.querySelector(`${rowSelector} td:nth-child(${colIndex + 1})`);
+  const svg = document.getElementById('arrowSvg');
+  if (!td || !svg) return { x: 0, y: 0 };
+
+  const tdRect = td.getBoundingClientRect();
+  const svgRect = svg.getBoundingClientRect();
+
+  return {
+    x: (tdRect.left + tdRect.width / 2) - svgRect.left,
+    y: (tdRect.top + tdRect.height / 2) - svgRect.top
+  };
 };
 
 const getCarryPos = colIndex => {
-  const td=document.querySelector(`#carryRow td:nth-child(${colIndex+1})`);
-  if(!td) return {x:0,y:0};
-  const rc=td.getBoundingClientRect(), tableRect=document.getElementById('multTable').getBoundingClientRect();
-  return {x:(rc.left-tableRect.left)+rc.width-12, y:(rc.top-tableRect.top)+35};
+  const td = document.querySelector(`#carryRow td:nth-child(${colIndex + 1}) .carry`) || document.querySelector(`#carryRow td:nth-child(${colIndex + 1})`);
+  const svg = document.getElementById('arrowSvg');
+  if (!td || !svg) return { x: 0, y: 0 };
+
+  const tdRect = td.getBoundingClientRect();
+  const svgRect = svg.getBoundingClientRect();
+
+  // place carry bubble slightly above the carry cell's center
+  return {
+    x: (tdRect.left + tdRect.width / 2) - svgRect.left,
+    y: (tdRect.top + tdRect.height / 2) - svgRect.top - 12
+  };
 };
 
-/* ======= Carry & Arrows ======= */
-/* ======= Carry & Arrows (Refactored) ======= */
+/* ======= Carry & Arrows (improved) ======= */
 const drawCarryArrow = (fromXY, toXY, label) => {
   const svg = document.getElementById('arrowSvg');
+  const overlay = document.getElementById('overlayWrap');
+  if (!svg || !overlay) return;
 
-  // Create path element
-  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d',`M${fromXY.x} ${fromXY.y} Q ${fromXY.x+(toXY.x-fromXY.x)*0.2} ${fromXY.y+(toXY.y-fromXY.y)*0.2-15} ${toXY.x} ${toXY.y}`);
-  path.setAttribute('stroke','#3b82f6');
-  path.setAttribute('stroke-width','2');
-  path.setAttribute('fill','none');
-  path.setAttribute('stroke-dasharray', 1000); // large number for animation
-  path.setAttribute('stroke-dashoffset', 1000);
+  // Create path element with a quadratic curve
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const ctrlX = fromXY.x + (toXY.x - fromXY.x) * 0.25;
+  const ctrlY = Math.min(fromXY.y, toXY.y) - 20;
+  const d = `M ${fromXY.x} ${fromXY.y} Q ${ctrlX} ${ctrlY} ${toXY.x} ${toXY.y}`;
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', '#3b82f6');
+  path.setAttribute('stroke-width', '2');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+
   svg.appendChild(path);
 
-  // Animate the path drawing
+  // use the real path length for dash animation
+  let len = 0;
+  try { len = path.getTotalLength(); } catch (e) { len = 1000; }
+  path.style.strokeDasharray = len;
+  path.style.strokeDashoffset = len;
+
+  // Animate the path drawing, then remove the path
   gsap.to(path, {
     strokeDashoffset: 0,
-    duration: 0.65,
+    duration: 0.6,
     ease: "power2.out",
-    onComplete: () => path.remove() // remove arrow after animation
+    onComplete: () => { path.remove(); }
   });
 
-  // Create bubble element
+  // Create and style bubble (inline styles so it works even if CSS missing)
   const bubble = document.createElement('div');
-  bubble.className='animatedCarryBubble';
-  bubble.textContent=label;
-  bubble.style.left=`${toXY.x}px`;
-  bubble.style.top=`${toXY.y}px`;
-  document.getElementById('overlayWrap').appendChild(bubble);
+  bubble.className = 'animatedCarryBubble';
+  bubble.textContent = label;
+  // inline styling for robustness
+  bubble.style.position = 'absolute';
+  bubble.style.left = `${toXY.x}px`;
+  bubble.style.top = `${toXY.y}px`;
+  bubble.style.transform = 'translate(-50%, -140%)'; // center horizontally, position above
+  bubble.style.padding = '4px 8px';
+  bubble.style.borderRadius = '8px';
+  bubble.style.fontWeight = '700';
+  bubble.style.fontSize = '13px';
+  bubble.style.background = '#ffffff';
+  bubble.style.color = '#ef4444';
+  bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+  bubble.style.pointerEvents = 'none';
+  bubble.style.zIndex = 1100;
 
-  // Animate bubble
-  gsap.fromTo(bubble, 
-    {opacity:0,y:0,scale:0.6}, 
-    {opacity:1,y:-20,scale:1.1,duration:0.25,ease:'back.out(1.7)',
-     onComplete: () => gsap.to(bubble, {opacity:0,y:-40,duration:0.8, onComplete: ()=>bubble.remove()})
-    }
-  );
+  overlay.appendChild(bubble);
+
+  // animate the bubble: pop up then fade out
+  gsap.fromTo(bubble,
+    { opacity: 0, y: 6, scale: 0.7 },
+    {
+      opacity: 1, y: 0, scale: 1.03, duration: 0.26, ease: 'back.out(1.6)',
+      onComplete: () => {
+        gsap.to(bubble, { opacity: 0, y: -26, duration: 0.8, delay: 0.45, onComplete: () => bubble.remove() });
+      }
+    });
 };
 
-
 /* ======= Multiplication Steps ======= */
-let steps=[], currentStep=0;
+let steps = [], currentStep = 0;
 
-const buildSteps = (a,b) => {
-  steps=[]; currentStep=0;
+const buildSteps = (a, b) => {
+  steps = []; currentStep = 0;
   const A = String(a).split('').map(Number), B = String(b).split('').map(Number).reverse();
-  const totalCols = cols; 
+  const totalCols = cols;
   const partialProducts = [];
 
-  B.forEach((nDigit,rowIdx)=>{
-    steps.push({type:'showTable',digit:nDigit});
-    const pp = new Array(totalCols).fill(0); 
+  B.forEach((nDigit, rowIdx) => {
+    steps.push({ type: 'showTable', digit: nDigit });
+    const pp = new Array(totalCols).fill(0);
     let carry = 0;
 
-    for(let i=A.length-1;i>=0;i--){
-      const col = totalCols-(A.length-i)-rowIdx;
-      const prod = A[i]*nDigit + carry; 
+    for (let i = A.length - 1; i >= 0; i--) {
+      const col = totalCols - (A.length - i) - rowIdx;
+      const prod = A[i] * nDigit + carry;
       const ones = prod % 10;
-      const newCarry = Math.floor(prod/10);
-      steps.push({type:'mulWrite',row:rowIdx,col,val:ones,mDigit:A[i],nDigit,prod});
+      const newCarry = Math.floor(prod / 10);
+      steps.push({ type: 'mulWrite', row: rowIdx, col: col, val: ones, mDigit: A[i], nDigit, prod });
       pp[col] = ones;
-      if(newCarry>0) steps.push({type:'mulCarry',row:rowIdx,fromCol:col,toCol:col-1,val:newCarry,prod});
+      if (newCarry > 0) steps.push({ type: 'mulCarry', row: rowIdx, fromCol: col, toCol: col - 1, val: newCarry, prod });
       carry = newCarry;
     }
 
-    if(carry>0){
-      const leftCol = totalCols-A.length-rowIdx-1;
-      steps.push({type:'mulFinalCarryToDigit',row:rowIdx,fromCol:leftCol+1,toCol:leftCol,val:carry});
+    if (carry > 0) {
+      const leftCol = totalCols - A.length - rowIdx - 1;
+      steps.push({ type: 'mulFinalCarryToDigit', row: rowIdx, fromCol: leftCol + 1, toCol: leftCol, val: carry });
       pp[leftCol] = carry;
     }
     partialProducts.push(pp);
   });
 
-  let addCarry=0;
-  for(let col=totalCols-1; col>=0; col--){
-    let sum = addCarry; const summands=[];
-    for(const r of partialProducts){ sum+=r[col]||0; if(r[col]) summands.push(r[col]); }
-    const ones=sum%10, newCarry=Math.floor(sum/10);
-    steps.push({type:'addWrite',col,val:ones,summands,summandsTotal:sum,carryOut:newCarry});
-    if(newCarry>0 && col>0) steps.push({type:'addCarry',fromCol:col,toCol:col-1,val:newCarry,sum:sum});
+  let addCarry = 0;
+  for (let col = totalCols - 1; col >= 0; col--) {
+    let sum = addCarry; const summands = [];
+    for (const r of partialProducts) { sum += r[col] || 0; if (r[col]) summands.push(r[col]); }
+    const ones = sum % 10, newCarry = Math.floor(sum / 10);
+    steps.push({ type: 'addWrite', col: col, val: ones, summands, summandsTotal: sum, carryOut: newCarry });
+    if (newCarry > 0 && col > 0) steps.push({ type: 'addCarry', fromCol: col, toCol: col - 1, val: newCarry, sum: sum });
     addCarry = newCarry;
   }
-  if(addCarry>0) steps.push({type:'addFinalCarryToDigit',col:0,val:addCarry});
+  if (addCarry > 0) steps.push({ type: 'addFinalCarryToDigit', col: 0, val: addCarry });
 };
 
 /* ======= Right Table Display ======= */
 const showMultiplicationTable = digit => {
   const container = document.getElementById('multTableDisplay');
-  if(digit==null){ container.innerHTML=`<p style="text-align:center;color:#999">No digit</p>`; return; }
-  let html = `<table id="digitTable">`;
-  for(let i=1;i<=12;i++) html+=`<tr data-prod="${digit*i}"><td style="width:55%">${digit} × ${i}</td><td style="width:45%;">= ${digit*i}</td></tr>`;
-  html+=`</table>`; container.innerHTML=html;
+  if (!container) return;
+  if (digit == null) { container.innerHTML = `<p style="text-align:center;color:#999">No digit</p>`; return; }
+  let html = `<table id="digitTable" style="width:100%;">`;
+  for (let i = 1; i <= 12; i++) html += `<tr data-prod="${digit * i}"><td style="width:55%">${digit} × ${i}</td><td style="width:45%;">= ${digit * i}</td></tr>`;
+  html += `</table>`; container.innerHTML = html;
 };
 const flashTableRow = prod => {
-  const row=document.querySelector(`#digitTable tr[data-prod='${prod}']`);
-  if(row){ row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),900); }
+  const row = document.querySelector(`#digitTable tr[data-prod='${prod}']`);
+  if (row) { row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 900); }
 };
 
 /* ======= Step Player ======= */
 const highlightDigit = td => {
-  if(!td) return;
-  gsap.fromTo(td,{scale:1},{scale:1.2,duration:0.25,yoyo:true,repeat:1,ease:'power1.inOut'});
+  if (!td) return;
+  gsap.fromTo(td, { scale: 1 }, { scale: 1.12, duration: 0.22, yoyo: true, repeat: 1, ease: 'power1.inOut' });
 };
 
-async function playStep(){
-  if(currentStep>=steps.length) return;
+async function playStep() {
+  if (currentStep >= steps.length) return;
   const step = steps[currentStep];
-  document.querySelectorAll('#multiplicandRow td, #multiplierRow td').forEach(td=>td.classList.remove('activeDigit'));
+  document.querySelectorAll('#multiplicandRow td, #multiplierRow td').forEach(td => td.classList.remove('activeDigit'));
 
   const handlers = {
     'showTable': s => showMultiplicationTable(s.digit),
@@ -268,118 +410,134 @@ async function playStep(){
 }
 
 /* ======= Handlers ======= */
-function handleMulWrite(step){
-  const mCell=document.querySelector(`#multiplicandRow td:nth-child(${step.col+1})`);
-  const nCell=document.querySelector(`#multiplierRow td:nth-child(${step.col+1})`);
-  if(mCell) mCell.classList.add('activeDigit'); 
-  if(nCell) nCell.classList.add('activeDigit');
-  const cell=document.querySelector(`#partial${step.row} td:nth-child(${step.col+1}) input`);
-  if(cell){ cell.value=step.val; cell.classList.add('correct'); gsap.fromTo(cell,{y:-28,opacity:0},{y:0,opacity:1,duration:1.25,ease:'power2.out'}); playDing(); }
-  flashTableRow(step.mDigit*step.nDigit);
-  speak(`${step.mDigit} times ${step.nDigit} equals ${step.mDigit*step.nDigit}`);
-  showExplanation(`${step.mDigit} times ${step.nDigit} equals ${step.mDigit*step.nDigit}`,1200);
+function handleMulWrite(step) {
+  const mCell = document.querySelector(`#multiplicandRow td:nth-child(${step.col + 1})`);
+  const nCell = document.querySelector(`#multiplierRow td:nth-child(${step.col + 1})`);
+  if (mCell) { mCell.classList.add('activeDigit'); highlightDigit(mCell); }
+  if (nCell) { nCell.classList.add('activeDigit'); highlightDigit(nCell); }
+  const cell = document.querySelector(`#partial${step.row} td:nth-child(${step.col + 1}) input`);
+  if (cell) {
+    cell.value = step.val;
+    cell.classList.add('correct');
+    gsap.fromTo(cell, { y: -22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'power2.out' });
+    playDing();
+  }
+  flashTableRow(step.mDigit * step.nDigit);
+  speak(`${step.mDigit} times ${step.nDigit} equals ${step.mDigit * step.nDigit}`);
+  showExplanation(`${step.mDigit} × ${step.nDigit} = ${step.mDigit * step.nDigit}`, 1200);
 }
 
-function handleMulCarry(step){
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol+1}) .carry`);
-  if(carryCell) {
-    carryCell.textContent = step.val; // temporarily show carry
-  }
+function handleMulCarry(step) {
+  // show a temporary carry inside the top carry cell if present
+  const carryCellDiv = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
+  if (carryCellDiv) carryCellDiv.textContent = step.val;
 
-  drawCarryArrow(
-    getCellCenter(`#partial${step.row}`, step.fromCol),
-    getCarryPos(step.toCol),
-    `carry ${step.val}`
-  );
+  // compute coordinates relative to svg
+  const from = getCellCenter(`#partial${step.row}`, step.fromCol);
+  const to = getCarryPos(step.toCol);
+  drawCarryArrow(from, to, `+${step.val}`);
 
   showExplanation(`Carry ${step.val} goes up`, 1200);
 
-  // Clear carry after animation
+  // Clear carry after animation time
   setTimeout(() => {
-    if(carryCell) carryCell.textContent = '';
-  }, 1200); // match the duration of animation/explanation
+    if (carryCellDiv) carryCellDiv.textContent = '';
+  }, 1300);
 }
 
-function handleMulFinalCarry(step){
-  const cell = document.querySelector(`#partial${step.row} td:nth-child(${step.toCol+1}) input`);
-  if(cell){
-    cell.value = step.val; 
+function handleMulFinalCarry(step) {
+  const cell = document.querySelector(`#partial${step.row} td:nth-child(${step.toCol + 1}) input`);
+  if (cell) {
+    cell.value = step.val;
     cell.parentElement.classList.add('finalCarry');
     setTimeout(() => cell.parentElement.classList.remove('finalCarry'), 900);
   }
 
-  drawCarryArrow(
-    getCellCenter(`#partial${step.row}`, step.fromCol),
-    getCellCenter(`#partial${step.row}`, step.toCol),
-    `final carry ${step.val}`
-  );
+  const from = getCellCenter(`#partial${step.row}`, step.fromCol);
+  const to = getCellCenter(`#partial${step.row}`, step.toCol);
+  drawCarryArrow(from, to, `${step.val}`);
 
-  // Clear carry from previous cell
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol+1}) .carry`);
-  if(carryCell) carryCell.textContent = '';
+  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
+  if (carryCell) carryCell.textContent = '';
 
   speak(`Final carry ${step.val} placed`);
   showExplanation(`Final carry ${step.val} placed`, 1200);
 }
 
-
-function handleAddWrite(step){
-  const cell=document.querySelector(`#resultRow td:nth-child(${step.col+1}) input`);
-  if(cell){ cell.value=step.val; cell.classList.add('correct'); gsap.fromTo(cell,{y:-28,opacity:0},{y:0,opacity:1,duration:0.45}); playDing();}
-  const summands=step.summands.join(" plus ");
-  speak(`${summands} equals ${step.summandsTotal}, write ${step.val}${step.carryOut?', carry '+step.carryOut:''}`);
-  showExplanation(`${summands} = ${step.summandsTotal}, write ${step.val}`,1300);
+function handleAddWrite(step) {
+  const cell = document.querySelector(`#resultRow td:nth-child(${step.col + 1}) input`);
+  if (cell) {
+    cell.value = step.val;
+    cell.classList.add('correct');
+    gsap.fromTo(cell, { y: -18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45 });
+    playDing();
+  }
+  const summands = step.summands.join(" plus ");
+  speak(`${summands} equals ${step.summandsTotal}, write ${step.val}${step.carryOut ? ', carry ' + step.carryOut : ''}`);
+  showExplanation(`${summands} = ${step.summandsTotal}, write ${step.val}`, 1300);
 }
 
-function handleAddCarry(step){
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol+1}) .carry`);
-  if(carryCell) {
-    carryCell.textContent = '';  // clear the carry after using it
-  }
-  drawCarryArrow(getCellCenter('#resultRow', step.fromCol), getCarryPos(step.toCol), `carry ${step.val}`);
+function handleAddCarry(step) {
+  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
+  if (carryCell) carryCell.textContent = '';
+
+  const from = getCellCenter('#resultRow', step.fromCol);
+  const to = getCarryPos(step.toCol);
+  drawCarryArrow(from, to, `+${step.val}`);
   showExplanation(`Carry ${step.val} to next column`, 1200);
 }
 
-function handleAddFinalCarry(step){
-  const cell = document.querySelector(`#resultRow td:nth-child(${step.col+1}) input`);
-  if(cell){
-    cell.value = step.val; 
+function handleAddFinalCarry(step) {
+  const cell = document.querySelector(`#resultRow td:nth-child(${step.col + 1}) input`);
+  if (cell) {
+    cell.value = step.val;
     cell.parentElement.classList.add('finalCarry');
-    setTimeout(()=>cell.parentElement.classList.remove('finalCarry'),900);
+    setTimeout(() => cell.parentElement.classList.remove('finalCarry'), 900);
   }
-  // Clear the carry bubble if any in the last column
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.col+1}) .carry`);
-  if(carryCell) carryCell.textContent = '';
-  
+  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.col + 1}) .carry`);
+  if (carryCell) carryCell.textContent = '';
+
   speak(`Final carry ${step.val} placed`);
   showExplanation(`Final carry ${step.val} placed`, 1200);
 }
 
 /* ======= Auto Play ======= */
-const autoPlay = async () => { currentStep=0; while(currentStep<steps.length){ await playStep(); await sleep(900); }};
+const autoPlay = async () => {
+  currentStep = 0;
+  while (currentStep < steps.length) {
+    await playStep();
+    await sleep(900);
+  }
+};
 
 /* ======= Event Bindings ======= */
-document.getElementById('startBtn').addEventListener('click', ()=>{
-  const a=+document.getElementById('multiplicandInput').value;
-  const b=+document.getElementById('multiplierInput').value;
-  buildTable(a,b); buildSteps(a,b); currentStep=0;
-  document.getElementById('multTableDisplay').innerHTML=`<p style="text-align:center;color:#666">Table will appear when a digit step runs</p>`;
+document.getElementById('startBtn').addEventListener('click', () => {
+  const a = +document.getElementById('multiplicandInput').value;
+  const b = +document.getElementById('multiplierInput').value;
+  buildTable(a, b);
+  buildSteps(a, b);
+  currentStep = 0;
+  const mt = document.getElementById('multTableDisplay');
+  if (mt) mt.innerHTML = `<p style="text-align:center;color:#666">Table will appear when a digit step runs</p>`;
 });
-document.getElementById('nextStepBtn').addEventListener('click', async()=>await playStep());
-document.getElementById('autoPlayBtn').addEventListener('click', async()=>{
+document.getElementById('nextStepBtn').addEventListener('click', async () => await playStep());
+document.getElementById('autoPlayBtn').addEventListener('click', async () => {
   document.getElementById('startBtn').click();
-  await sleep(200); autoPlay();
+  await sleep(200);
+  autoPlay();
 });
 window.addEventListener('resize', refreshOverlaySize);
-document.addEventListener('DOMContentLoaded', ()=>{
-  const a=+document.getElementById('multiplicandInput').value;
-  const b=+document.getElementById('multiplierInput').value;
-  buildTable(a,b); buildSteps(a,b);
+document.addEventListener('DOMContentLoaded', () => {
+  const a = +document.getElementById('multiplicandInput').value;
+  const b = +document.getElementById('multiplierInput').value;
+  buildTable(a, b);
+  buildSteps(a, b);
 });
 
 /* ======= Expose Utilities ======= */
 window.showMultiplicationTable = showMultiplicationTable;
 window.flashTableRow = flashTableRow;
 </script>
+
 </body>
 </html>
