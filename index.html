@@ -1,543 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pencil-on-Paper Multiplication Tutor — Responsive</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Operations Index</title>
   <style>
-    :root {
-      --bg:#f0f4f8; --accent:#3b82f6; --accent-light:#dbeafe;
-      --carry:#ef4444; --highlight:#fde68a; --success:#34d399;
-      --table-bg:#ffffff; --border-light:#e5e7eb;
-      --text-dark:#111827; --text-muted:#6b7280;
+    /* ====== Reset & Base ====== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+
     body {
-      font-family:'Segoe UI',Tahoma,sans-serif;
-      margin:0; padding:0;
-      background:var(--bg); color:var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
-    #container {
-      display:flex;
-      flex-direction:column;
-      min-height:100vh;
-      gap:16px;
+
+    /* ====== Container ====== */
+    .container {
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
     }
-    #left,#right {
-      padding:16px;
-      box-sizing:border-box;
-    }
-    #right {
-      background:var(--table-bg);
-      border-top:2px solid var(--border-light);
-      box-shadow:0 -2px 8px rgba(0,0,0,0.05);
-      border-radius:12px 12px 0 0;
-    }
+
     h1 {
-      margin-bottom:10px;
-      font-size:clamp(20px, 5vw, 28px);
-      text-align:center; color:var(--accent);
+      margin-bottom: 40px;
+      font-size: clamp(24px, 5vw, 32px);
+      color: #111827;
     }
-    p.lead {
-      margin-bottom:20px;
-      text-align:center;
-      color:var(--text-muted);
-      font-size:clamp(14px, 3.5vw, 16px);
+
+    /* ====== Menu ====== */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
-    #ui {
-      text-align:center;
-      margin-bottom:20px;
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:10px;
+
+    .menu a {
+      display: block;
+      padding: 15px 20px;
+      background-color: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: clamp(16px, 4vw, 20px);
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
-    #ui label {
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      font-size:clamp(12px,3.5vw,14px);
+
+    .menu a:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
     }
-    #ui input[type=number] {
-      font-size:clamp(14px, 3vw, 16px);
-      width:100px; padding:6px 8px;
-      border-radius:10px;
-      border:1px solid var(--border-light);
-      outline:none;
-    }
-    #ui input[type=number]:focus {
-      border-color:var(--accent);
-      box-shadow:0 0 5px var(--accent-light);
-    }
-    button {
-      padding:8px 14px;
-      font-size:clamp(14px, 3vw, 16px);
-      border-radius:12px;
-      border:none;
-      background:var(--accent);
-      color:white;
-      cursor:pointer;
-      flex:1;
-      min-width:100px;
-    }
-    button:hover:not(:disabled) {
-      background:#2563eb;
-    }
-    button:disabled {
-      background:#d1d5db; cursor:not-allowed;
-    }
-    #overlayWrap {
-      position:relative;
-      width:100%;
-      margin:20px auto;
-      background:var(--table-bg);
-      padding:12px;
-      border-radius:16px;
-      box-shadow:0 10px 20px rgba(0,0,0,0.12);
-      overflow-x:auto;
-    }
-    table.tutor {
-      margin:0 auto;
-      border-collapse:collapse;
-      font-size:clamp(14px, 3vw, 18px);
-    }
-    table.tutor td {
-      width:40px; height:40px;
-      text-align:center;
-      border:1px solid var(--border-light);
-    }
-    table.tutor td input {
-      width:100%; height:100%;
-      font-size:inherit;
-      text-align:center;
-      border:none; background:transparent;
-    }
-    #right {
-      max-height:400px;
-      overflow-y:auto;
-    }
-    #tableDisplay h2 {
-      margin-bottom:10px;
-      font-size:clamp(16px, 4vw, 20px);
-      text-align:center;
-      color:var(--accent);
-    }
-    /* Responsive: two-column layout on larger screens */
-    @media(min-width:768px){
-      #container { flex-direction:row; }
-      #left { flex:0 0 70%; }
-      #right { flex:0 0 30%; border-top:none; border-left:2px solid var(--border-light); border-radius:0 12px 12px 0; }
+
+    /* ====== Responsive ====== */
+    @media (max-width: 480px) {
+      h1 {
+        margin-bottom: 30px;
+      }
+
+      .menu a {
+        padding: 12px 16px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="left">
-      <h1>Pencil-on-Paper Multiplication Tutor</h1>
-      <p class="lead">Step-by-step animations, carries, and spoken explanations for kids.</p>
-      <div id="ui">
-        <label>Multiplicand <input type="number" id="multiplicandInput" value="455"/></label>
-        <label>Multiplier <input type="number" id="multiplierInput" value="52"/></label>
-        <button id="startBtn">Start</button>
-        <button id="nextStepBtn">Next Step</button>
-        <button id="autoPlayBtn">Auto Play</button>
-      </div>
-      <div id="overlayWrap">
-        <div id="table-container"></div>
-        <svg id="arrowSvg"></svg>
-      </div>
-      <div id="explanation"></div>
-    </div>
-    <div id="right">
-      <div id="tableDisplay">
-        <h2>Multiplication Table</h2>
-        <p style="text-align:center;margin:6px 0 12px;color:#666;font-size:13px">
-          The currently used digit's times table will show here and flash the exact fact when used.
-        </p>
-        <div id="multTableDisplay">
-          <p style="text-align:center;color:#999">Press <strong>Start</strong> to begin.</p>
-        </div>
-      </div>
+  <div class="container">
+    <h1>Math Operations</h1>
+    <div class="menu">
+      <a href="addition and subtraction.html">Addition & Subtraction</a>
+      <a href="multiplication.html">Multiplication</a>
+      <a href="division.html">Division</a>
     </div>
   </div>
-
-  <!-- Scripts (at end for better performance) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script>
-/* ======= Utilities ======= */
-const sleep = ms => new Promise(res => setTimeout(res, ms));
-const ding = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
-const playDing = () => { try { ding.currentTime = 0; ding.play(); } catch (e) {} };
-const speak = text => {
-  if (!window.speechSynthesis) return;
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US'; utter.rate = 0.95; utter.pitch = 1.0;
-  window.speechSynthesis.cancel(); window.speechSynthesis.speak(utter);
-};
-const showExplanation = (text, duration = 1200) => {
-  const el = document.getElementById('explanation');
-  if (!el) return;
-  el.textContent = text; el.style.opacity = 1;
-  if (duration > 0) setTimeout(() => el.style.opacity = 0, duration);
-};
-
-/* ======= Table Builder ======= */
-let multiplicand = 0, multiplier = 0, cols = 0;
-
-const buildTable = (a, b) => {
-  multiplicand = +a; multiplier = +b;
-  const A = String(a).split(''), B = String(b).split('');
-  cols = A.length + B.length;
-
-  const createRow = (arr, offset = 0) => '<td></td>'.repeat(offset) + arr.map(c => `<td>${c}</td>`).join('');
-  let html = `<table class="tutor" id="multTable">
-    <tr id="carryRow">${'<td><div class="carry" style="top:2px;"></div></td>'.repeat(cols)}</tr>
-    <tr id="multiplicandRow">${createRow(A, cols - A.length)}</tr>
-    <tr id="multiplierRow">${createRow(['×', ...B], cols - B.length - 1)}</tr>`;
-  B.forEach((_, i) => html += `<tr class="partialRow" id="partial${i}">${'<td><input maxlength="1"/></td>'.repeat(cols)}</tr>`);
-  html += `<tr><td colspan="${cols}"><hr/></td></tr>
-    <tr id="resultRow">${'<td><input maxlength="1"/></td>'.repeat(cols)}</tr>
-  </table>`;
-
-  document.getElementById('table-container').innerHTML = html;
-  // give browsers a tiny moment to render before measuring
-  requestAnimationFrame(refreshOverlaySize);
-};
-
-/* ======= Overlay & Geometry (refactored) ======= */
-const refreshOverlaySize = () => {
-  const svg = document.getElementById('arrowSvg');
-  const overlay = document.getElementById('overlayWrap');
-  if (!svg || !overlay) return;
-
-  // Ensure the svg is absolutely positioned over the overlay's visible area
-  svg.style.position = 'absolute';
-  svg.style.top = '0px';
-  svg.style.left = '0px';
-  svg.style.pointerEvents = 'none';
-  svg.style.overflow = 'visible';
-  svg.style.zIndex = 999;
-
-  // Set svg dimensions equal to overlay's client (visible) size
-  const w = Math.max(overlay.clientWidth, 100);
-  const h = Math.max(overlay.clientHeight, 100);
-  svg.setAttribute('width', w);
-  svg.setAttribute('height', h);
-  svg.style.width = w + 'px';
-  svg.style.height = h + 'px';
-};
-
-/**
- * Return position (x,y) in SVG coordinate space for the center of a cell.
- * Uses element.getBoundingClientRect() - svg.getBoundingClientRect() to translate coordinates.
- */
-const getCellCenter = (rowSelector, colIndex) => {
-  const td = document.querySelector(`${rowSelector} td:nth-child(${colIndex + 1})`);
-  const svg = document.getElementById('arrowSvg');
-  if (!td || !svg) return { x: 0, y: 0 };
-
-  const tdRect = td.getBoundingClientRect();
-  const svgRect = svg.getBoundingClientRect();
-
-  return {
-    x: (tdRect.left + tdRect.width / 2) - svgRect.left,
-    y: (tdRect.top + tdRect.height / 2) - svgRect.top
-  };
-};
-
-const getCarryPos = colIndex => {
-  const td = document.querySelector(`#carryRow td:nth-child(${colIndex + 1}) .carry`) || document.querySelector(`#carryRow td:nth-child(${colIndex + 1})`);
-  const svg = document.getElementById('arrowSvg');
-  if (!td || !svg) return { x: 0, y: 0 };
-
-  const tdRect = td.getBoundingClientRect();
-  const svgRect = svg.getBoundingClientRect();
-
-  // place carry bubble slightly above the carry cell's center
-  return {
-    x: (tdRect.left + tdRect.width / 2) - svgRect.left,
-    y: (tdRect.top + tdRect.height / 2) - svgRect.top - 12
-  };
-};
-
-/* ======= Carry & Arrows (improved) ======= */
-const drawCarryArrow = (fromXY, toXY, label) => {
-  const svg = document.getElementById('arrowSvg');
-  const overlay = document.getElementById('overlayWrap');
-  if (!svg || !overlay) return;
-
-  // Create path element with a quadratic curve
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  const ctrlX = fromXY.x + (toXY.x - fromXY.x) * 0.25;
-  const ctrlY = Math.min(fromXY.y, toXY.y) - 20;
-  const d = `M ${fromXY.x} ${fromXY.y} Q ${ctrlX} ${ctrlY} ${toXY.x} ${toXY.y}`;
-  path.setAttribute('d', d);
-  path.setAttribute('stroke', '#3b82f6');
-  path.setAttribute('stroke-width', '2');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-
-  svg.appendChild(path);
-
-  // use the real path length for dash animation
-  let len = 0;
-  try { len = path.getTotalLength(); } catch (e) { len = 1000; }
-  path.style.strokeDasharray = len;
-  path.style.strokeDashoffset = len;
-
-  // Animate the path drawing, then remove the path
-  gsap.to(path, {
-    strokeDashoffset: 0,
-    duration: 0.6,
-    ease: "power2.out",
-    onComplete: () => { path.remove(); }
-  });
-
-  // Create and style bubble (inline styles so it works even if CSS missing)
-  const bubble = document.createElement('div');
-  bubble.className = 'animatedCarryBubble';
-  bubble.textContent = label;
-  // inline styling for robustness
-  bubble.style.position = 'absolute';
-  bubble.style.left = `${toXY.x}px`;
-  bubble.style.top = `${toXY.y}px`;
-  bubble.style.transform = 'translate(-50%, -140%)'; // center horizontally, position above
-  bubble.style.padding = '4px 8px';
-  bubble.style.borderRadius = '8px';
-  bubble.style.fontWeight = '700';
-  bubble.style.fontSize = '13px';
-  bubble.style.background = '#ffffff';
-  bubble.style.color = '#ef4444';
-  bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-  bubble.style.pointerEvents = 'none';
-  bubble.style.zIndex = 1100;
-
-  overlay.appendChild(bubble);
-
-  // animate the bubble: pop up then fade out
-  gsap.fromTo(bubble,
-    { opacity: 0, y: 6, scale: 0.7 },
-    {
-      opacity: 1, y: 0, scale: 1.03, duration: 0.26, ease: 'back.out(1.6)',
-      onComplete: () => {
-        gsap.to(bubble, { opacity: 0, y: -26, duration: 0.8, delay: 0.45, onComplete: () => bubble.remove() });
-      }
-    });
-};
-
-/* ======= Multiplication Steps ======= */
-let steps = [], currentStep = 0;
-
-const buildSteps = (a, b) => {
-  steps = []; currentStep = 0;
-  const A = String(a).split('').map(Number), B = String(b).split('').map(Number).reverse();
-  const totalCols = cols;
-  const partialProducts = [];
-
-  B.forEach((nDigit, rowIdx) => {
-    steps.push({ type: 'showTable', digit: nDigit });
-    const pp = new Array(totalCols).fill(0);
-    let carry = 0;
-
-    for (let i = A.length - 1; i >= 0; i--) {
-      const col = totalCols - (A.length - i) - rowIdx;
-      const prod = A[i] * nDigit + carry;
-      const ones = prod % 10;
-      const newCarry = Math.floor(prod / 10);
-      steps.push({ type: 'mulWrite', row: rowIdx, col: col, val: ones, mDigit: A[i], nDigit, prod });
-      pp[col] = ones;
-      if (newCarry > 0) steps.push({ type: 'mulCarry', row: rowIdx, fromCol: col, toCol: col - 1, val: newCarry, prod });
-      carry = newCarry;
-    }
-
-    if (carry > 0) {
-      const leftCol = totalCols - A.length - rowIdx - 1;
-      steps.push({ type: 'mulFinalCarryToDigit', row: rowIdx, fromCol: leftCol + 1, toCol: leftCol, val: carry });
-      pp[leftCol] = carry;
-    }
-    partialProducts.push(pp);
-  });
-
-  let addCarry = 0;
-  for (let col = totalCols - 1; col >= 0; col--) {
-    let sum = addCarry; const summands = [];
-    for (const r of partialProducts) { sum += r[col] || 0; if (r[col]) summands.push(r[col]); }
-    const ones = sum % 10, newCarry = Math.floor(sum / 10);
-    steps.push({ type: 'addWrite', col: col, val: ones, summands, summandsTotal: sum, carryOut: newCarry });
-    if (newCarry > 0 && col > 0) steps.push({ type: 'addCarry', fromCol: col, toCol: col - 1, val: newCarry, sum: sum });
-    addCarry = newCarry;
-  }
-  if (addCarry > 0) steps.push({ type: 'addFinalCarryToDigit', col: 0, val: addCarry });
-};
-
-/* ======= Right Table Display ======= */
-const showMultiplicationTable = digit => {
-  const container = document.getElementById('multTableDisplay');
-  if (!container) return;
-  if (digit == null) { container.innerHTML = `<p style="text-align:center;color:#999">No digit</p>`; return; }
-  let html = `<table id="digitTable" style="width:100%;">`;
-  for (let i = 1; i <= 12; i++) html += `<tr data-prod="${digit * i}"><td style="width:55%">${digit} × ${i}</td><td style="width:45%;">= ${digit * i}</td></tr>`;
-  html += `</table>`; container.innerHTML = html;
-};
-const flashTableRow = prod => {
-  const row = document.querySelector(`#digitTable tr[data-prod='${prod}']`);
-  if (row) { row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 900); }
-};
-
-/* ======= Step Player ======= */
-const highlightDigit = td => {
-  if (!td) return;
-  gsap.fromTo(td, { scale: 1 }, { scale: 1.12, duration: 0.22, yoyo: true, repeat: 1, ease: 'power1.inOut' });
-};
-
-async function playStep() {
-  if (currentStep >= steps.length) return;
-  const step = steps[currentStep];
-  document.querySelectorAll('#multiplicandRow td, #multiplierRow td').forEach(td => td.classList.remove('activeDigit'));
-
-  const handlers = {
-    'showTable': s => showMultiplicationTable(s.digit),
-    'mulWrite': handleMulWrite,
-    'mulCarry': handleMulCarry,
-    'mulFinalCarryToDigit': handleMulFinalCarry,
-    'addWrite': handleAddWrite,
-    'addCarry': handleAddCarry,
-    'addFinalCarryToDigit': handleAddFinalCarry
-  };
-  handlers[step.type]?.(step);
-  currentStep++;
-}
-
-/* ======= Handlers ======= */
-function handleMulWrite(step) {
-  const mCell = document.querySelector(`#multiplicandRow td:nth-child(${step.col + 1})`);
-  const nCell = document.querySelector(`#multiplierRow td:nth-child(${step.col + 1})`);
-  if (mCell) { mCell.classList.add('activeDigit'); highlightDigit(mCell); }
-  if (nCell) { nCell.classList.add('activeDigit'); highlightDigit(nCell); }
-  const cell = document.querySelector(`#partial${step.row} td:nth-child(${step.col + 1}) input`);
-  if (cell) {
-    cell.value = step.val;
-    cell.classList.add('correct');
-    gsap.fromTo(cell, { y: -22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'power2.out' });
-    playDing();
-  }
-  flashTableRow(step.mDigit * step.nDigit);
-  speak(`${step.mDigit} times ${step.nDigit} equals ${step.mDigit * step.nDigit}`);
-  showExplanation(`${step.mDigit} × ${step.nDigit} = ${step.mDigit * step.nDigit}`, 1200);
-}
-
-function handleMulCarry(step) {
-  // show a temporary carry inside the top carry cell if present
-  const carryCellDiv = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
-  if (carryCellDiv) carryCellDiv.textContent = step.val;
-
-  // compute coordinates relative to svg
-  const from = getCellCenter(`#partial${step.row}`, step.fromCol);
-  const to = getCarryPos(step.toCol);
-  drawCarryArrow(from, to, `+${step.val}`);
-
-  showExplanation(`Carry ${step.val} goes up`, 1200);
-
-  // Clear carry after animation time
-  setTimeout(() => {
-    if (carryCellDiv) carryCellDiv.textContent = '';
-  }, 1300);
-}
-
-function handleMulFinalCarry(step) {
-  const cell = document.querySelector(`#partial${step.row} td:nth-child(${step.toCol + 1}) input`);
-  if (cell) {
-    cell.value = step.val;
-    cell.parentElement.classList.add('finalCarry');
-    setTimeout(() => cell.parentElement.classList.remove('finalCarry'), 900);
-  }
-
-  const from = getCellCenter(`#partial${step.row}`, step.fromCol);
-  const to = getCellCenter(`#partial${step.row}`, step.toCol);
-  drawCarryArrow(from, to, `${step.val}`);
-
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
-  if (carryCell) carryCell.textContent = '';
-
-  speak(`Final carry ${step.val} placed`);
-  showExplanation(`Final carry ${step.val} placed`, 1200);
-}
-
-function handleAddWrite(step) {
-  const cell = document.querySelector(`#resultRow td:nth-child(${step.col + 1}) input`);
-  if (cell) {
-    cell.value = step.val;
-    cell.classList.add('correct');
-    gsap.fromTo(cell, { y: -18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45 });
-    playDing();
-  }
-  const summands = step.summands.join(" plus ");
-  speak(`${summands} equals ${step.summandsTotal}, write ${step.val}${step.carryOut ? ', carry ' + step.carryOut : ''}`);
-  showExplanation(`${summands} = ${step.summandsTotal}, write ${step.val}`, 1300);
-}
-
-function handleAddCarry(step) {
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.toCol + 1}) .carry`);
-  if (carryCell) carryCell.textContent = '';
-
-  const from = getCellCenter('#resultRow', step.fromCol);
-  const to = getCarryPos(step.toCol);
-  drawCarryArrow(from, to, `+${step.val}`);
-  showExplanation(`Carry ${step.val} to next column`, 1200);
-}
-
-function handleAddFinalCarry(step) {
-  const cell = document.querySelector(`#resultRow td:nth-child(${step.col + 1}) input`);
-  if (cell) {
-    cell.value = step.val;
-    cell.parentElement.classList.add('finalCarry');
-    setTimeout(() => cell.parentElement.classList.remove('finalCarry'), 900);
-  }
-  const carryCell = document.querySelector(`#carryRow td:nth-child(${step.col + 1}) .carry`);
-  if (carryCell) carryCell.textContent = '';
-
-  speak(`Final carry ${step.val} placed`);
-  showExplanation(`Final carry ${step.val} placed`, 1200);
-}
-
-/* ======= Auto Play ======= */
-const autoPlay = async () => {
-  currentStep = 0;
-  while (currentStep < steps.length) {
-    await playStep();
-    await sleep(900);
-  }
-};
-
-/* ======= Event Bindings ======= */
-document.getElementById('startBtn').addEventListener('click', () => {
-  const a = +document.getElementById('multiplicandInput').value;
-  const b = +document.getElementById('multiplierInput').value;
-  buildTable(a, b);
-  buildSteps(a, b);
-  currentStep = 0;
-  const mt = document.getElementById('multTableDisplay');
-  if (mt) mt.innerHTML = `<p style="text-align:center;color:#666">Table will appear when a digit step runs</p>`;
-});
-document.getElementById('nextStepBtn').addEventListener('click', async () => await playStep());
-document.getElementById('autoPlayBtn').addEventListener('click', async () => {
-  document.getElementById('startBtn').click();
-  await sleep(200);
-  autoPlay();
-});
-window.addEventListener('resize', refreshOverlaySize);
-document.addEventListener('DOMContentLoaded', () => {
-  const a = +document.getElementById('multiplicandInput').value;
-  const b = +document.getElementById('multiplierInput').value;
-  buildTable(a, b);
-  buildSteps(a, b);
-});
-
-/* ======= Expose Utilities ======= */
-window.showMultiplicationTable = showMultiplicationTable;
-window.flashTableRow = flashTableRow;
-</script>
-
 </body>
 </html>
