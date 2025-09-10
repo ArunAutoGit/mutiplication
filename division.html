@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Long Division Table-based</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+  /* ====== Base ====== */
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background:#f9fafb; display:flex; justify-content:center; padding:20px; }
+  input, button { font-family: inherit; font-size:clamp(14px,3vw,16px); }
+
+  /* ====== Container ====== */
+  .division-wrapper { width:100%; max-width:480px; }
+  .input-container { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; justify-content:center; }
+  input[type=number] { width:80px; padding:6px; border-radius:6px; border:1px solid #ccc; text-align:center; }
+  button { padding:6px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; transition:0.3s; }
+  button:hover { background:#45a049; }
+
+  /* ====== Back Button ====== */
+  .back-btn { margin-bottom:15px; text-align:left; }
+  .back-btn a { padding:8px 12px; background:#4CAF50; color:#fff; text-decoration:none; border-radius:6px; display:inline-block; transition:0.3s; }
+  .back-btn a:hover { background:#45a049; }
+
+  /* ====== Division Container ====== */
+  .division-container { background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); overflow-x:auto; }
+  .long-division { position:relative; min-width:300px; }
+  .digit-row { display:flex; gap:4px; margin:2px 0; flex-wrap:wrap; }
+  .digit-box { width:32px; height:32px; display:flex; justify-content:center; align-items:center; border:1px solid #ccc; border-radius:6px; font-weight:bold; font-size:1.2rem; background:#fff; }
+
+  .quotient { position:absolute; top:-5px; }
+  .divisor { position:absolute; top:35px; left:0; display:flex; justify-content:flex-end; }
+  .dividend { position:absolute; top:35px; }
+
+  .bar-horizontal { border-top:2px solid black; position:absolute; top:35px; opacity:0; }
+  .bar-vertical { border-left:2px solid black; height:0; position:absolute; top:35px; opacity:0; }
+
+  /* ====== Steps ====== */
+  .step { margin-top:100px; margin-left:80px; opacity:0; }
+  .underline { border-top:2px solid black; margin:5px 0; width:100%; max-width:300px; }
+  .guide { border:1px solid #ddd; border-radius:6px; background:#f3f4f6; font-size:clamp(12px,3vw,14px); display:none; max-height:120px; overflow-y:auto; margin-top:5px; }
+  .guide table { width:100%; border-collapse:collapse; }
+  .guide td { padding:4px 6px; text-align:center; border-bottom:1px solid #e5e7eb; cursor:pointer; }
+  .guide tr:hover { background:#e0f2fe; }
+  .guide .selected { background:#bfdbfe; font-weight:bold; }
+  .toggle-btn { font-size:12px; color:#2563eb; cursor:pointer; display:inline-block; margin-top:4px; }
+
+  /* ====== Flying Digit ====== */
+  .flying-digit { position:absolute; font-size:1.2rem; font-weight:bold; color:#2563eb; pointer-events:none; z-index:999; }
+
+  /* ====== Responsive ====== */
+  @media(max-width:400px){
+    .digit-box { width:28px; height:28px; font-size:1rem; }
+    input[type=number] { width:60px; }
+  }
+</style>
+</head>
+<body>
+<div class="division-wrapper">
+  <div class="input-container">
+    Dividend: <input id="dividendInput" type="number" value="161">
+    Divisor: <input id="divisorInput" type="number" value="7">
+    <button onclick="initDivision()">Start Division</button>
+    <div class="back-btn">
+    <a href="index.html">&larr; Back to Home</a>
+  </div>
+  </div>
+  <div class="division-container">
+    <div class="long-division">
+      <div class="digit-row quotient" id="quotientRow"></div>
+      <div class="bar-horizontal"></div>
+      <div class="bar-vertical"></div>
+      <div class="digit-row divisor" id="divisorRow"></div>
+      <div class="digit-row dividend" id="dividendRow"></div>
+    </div>
+
+    <div class="step step1">
+      Step 1:
+      <div class="digit-row" id="step1Row"></div>
+      <div class="underline"></div>
+      <span class="toggle-btn" onclick="toggleGuide(this)">Show table</span>
+      <div class="guide" id="step1Guide"><table></table></div>
+    </div>
+
+    <div class="step step2">
+      Step 2 (Subtract):
+      <div class="digit-row" id="step2Row"></div>
+      <div class="underline"></div>
+    </div>
+
+    <div class="step step3">
+      Step 3 (Bring down):
+      <div class="digit-row" id="step3Row"></div>
+      <div class="underline"></div>
+    </div>
+
+    <div class="step step4">
+      Step 4 (Multiply & Subtract):
+      <div class="digit-row" id="step4Row"></div>
+      <div class="underline"></div>
+      <span class="toggle-btn" onclick="toggleGuide(this)">Show table</span>
+      <div class="guide" id="step4Guide"><table></table></div>
+    </div>
+
+    <div class="step remainder">
+      Remainder:
+      <div class="digit-row" id="remainderRow"></div>
+      <div class="underline"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let quotientIndex = 0;
+let dividendArr = [];
+let divisorGlobal = 0;
+
+function toggleGuide(btn){
+  const guide = btn.nextElementSibling;
+  guide.style.display = guide.style.display==='block'?'none':'block';
+  btn.textContent = guide.style.display==='block'?'Hide table':'Show table';
+}
+
+function animateFlyingDigit(digit, fromRect, toRect, callback){
+  const fly = document.createElement('div');
+  fly.className='flying-digit';
+  fly.textContent=digit;
+  document.body.appendChild(fly);
+  const offsetX = toRect.width/2-10;
+  const offsetY = toRect.height/2-10;
+  fly.style.left=fromRect.left+'px';
+  fly.style.top=fromRect.top+'px';
+  gsap.to(fly,{x:toRect.left-fromRect.left+offsetX, y:toRect.top-fromRect.top+offsetY, duration:0.6, ease:"power2.inOut", onComplete:()=>{fly.remove(); if(callback)callback();}});
+}
+
+function setDigitBoxes(containerId,count){
+  const container=document.getElementById(containerId);
+  container.innerHTML='';
+  for(let i=0;i<count;i++){
+    const div=document.createElement('div');
+    div.className='digit-box';
+    container.appendChild(div);
+  }
+}
+
+function placeDigits(value,rowId,fromRect,callback){
+  const digits = value.toString().split('');
+  setDigitBoxes(rowId,digits.length);
+  const boxes = document.querySelectorAll(`#${rowId} .digit-box`);
+  let i=0;
+  function next(){
+    if(i>=digits.length){if(callback)callback(); return;}
+    const box = boxes[i];
+    animateFlyingDigit(digits[i],fromRect,box.getBoundingClientRect(),()=>{box.textContent=digits[i]; i++; next();});
+  }
+  next();
+}
+
+function addQuotientDigit(digit, fromRect, callback){
+  const container=document.getElementById('quotientRow');
+  const box=document.createElement('div');
+  box.className='digit-box';
+  container.appendChild(box);
+  animateFlyingDigit(digit,fromRect,box.getBoundingClientRect(),()=>{box.textContent=digit;if(callback)callback();});
+}
+
+function showRemainder(value, fromRect, callback){
+  placeDigits(value,'remainderRow',fromRect,callback);
+}
+
+function generateTable(divisor,guideId,rowId){
+  const table=document.querySelector(`#${guideId} table`);
+  table.innerHTML='';
+  for(let i=0;i<=9;i++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${divisor} × ${i}</td><td>=</td><td>${divisor*i}</td>`;
+    tr.onclick=()=>selectMultiple(tr,rowId,i);
+    table.appendChild(tr);
+  }
+}
+
+function initDivision(){
+  quotientIndex=0;
+  const dividend=parseInt(document.getElementById('dividendInput').value,10);
+  divisorGlobal=parseInt(document.getElementById('divisorInput').value,10);
+  dividendArr=dividend.toString().split('').map(d=>parseInt(d,10));
+
+  const digitWidth=36;
+  const divisorWidth=divisorGlobal.toString().length*digitWidth;
+  const barLeft=divisorWidth+20;
+
+  document.getElementById('divisorRow').style.width=divisorWidth+'px';
+  document.querySelector('.bar-vertical').style.left=barLeft+'px';
+  document.querySelector('.bar-horizontal').style.left=barLeft+'px';
+  document.querySelector('.bar-horizontal').style.width='200px';
+  document.getElementById('dividendRow').style.left=(barLeft+25)+'px';
+  document.getElementById('quotientRow').style.left=(barLeft+25)+'px';
+
+  setDigitBoxes('divisorRow',divisorGlobal.toString().length);
+  setDigitBoxes('dividendRow',dividendArr.length);
+  document.getElementById('quotientRow').innerHTML='';
+  document.getElementById('remainderRow').innerHTML='';
+
+  ['step1Row','step2Row','step3Row','step4Row'].forEach(id=>setDigitBoxes(id,1));
+  Array.from(divisorGlobal.toString()).forEach((d,i)=>document.querySelectorAll('#divisorRow .digit-box')[i].textContent=d);
+  dividendArr.forEach((d,i)=>document.querySelectorAll('#dividendRow .digit-box')[i].textContent=d);
+
+  generateTable(divisorGlobal,'step1Guide','step1Row');
+  generateTable(divisorGlobal,'step4Guide','step4Row');
+
+  gsap.timeline()
+    .to(".bar-horizontal",{opacity:1,duration:0.45})
+    .to(".bar-vertical",{opacity:1,duration:0.45,height:"60px"},"-=0.25")
+    .to(".step",{opacity:1,y:-10,duration:0.5,stagger:0.15});
+}
+
+function selectMultiple(row,rowId,quotientDigit){
+  row.parentNode.querySelectorAll('tr').forEach(r=>r.classList.remove('selected'));
+  row.classList.add('selected');
+  const product=parseInt(row.cells[2].innerText,10);
+  const fromRect=row.getBoundingClientRect();
+
+  if(rowId==='step1Row'){
+    placeDigits(product,'step1Row',fromRect,()=>{
+      let step1Val=parseInt(dividendArr.slice(0,product.toString().length).join(''));
+      let step2Val=step1Val-product;
+      placeDigits(step2Val,'step2Row',fromRect,()=>{
+        const remainingDigits=dividendArr.slice(product.toString().length).join('');
+        const step3Val=parseInt(step2Val.toString()+remainingDigits,10);
+        console.log("Step 3 value:",step3Val);
+        placeDigits(step3Val,'step3Row',fromRect,()=>{});
+      });
+    });
+  }
+
+  if(rowId==='step4Row'){
+    let step3Val=parseInt(Array.from(document.querySelectorAll('#step3Row .digit-box')).map(d=>d.textContent||0).join(''),10);
+    let step4Val=product;
+    console.log("Step 4 product:",step4Val);
+    placeDigits(step4Val,'step4Row',fromRect,()=>{
+      const remainder=step3Val-step4Val;
+      console.log("Remainder:",remainder);
+      showRemainder(remainder,fromRect);
+    });
+  }
+
+  addQuotientDigit(quotientDigit,fromRect);
+  quotientIndex++;
+
+  row.closest('.guide').style.display='none';
+  row.closest('.guide').previousElementSibling.textContent='Show table';
+}
+</script>
+</body>
+</html>

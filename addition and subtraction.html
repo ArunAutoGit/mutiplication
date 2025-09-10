@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Whiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        .digit-cell {
+            width: 3rem;
+            height: 3rem;
+            font-size: 1.5rem;
+            text-align: center;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            position: relative; /* For absolutely positioned children */
+        }
+        .user-input {
+            background-color: #ffffff;
+            border: 2px solid #3b82f6;
+            color: #1f2937;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .user-input:focus {
+            border-color: #2563eb;
+        }
+        .carry-borrow-input {
+            height: 2.5rem;
+            width: 2.5rem;
+            font-size: 1rem;
+            text-align: center;
+            border-radius: 9999px;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+            background-color: #fee2e2;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .carry-borrow-input:focus {
+            border-color: #dc2626;
+        }
+        .feedback-box {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .flying-digit {
+            position: absolute;
+            z-index: 50;
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ef4444;
+        }
+        .strikethrough-digit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .strikethrough {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #dc2626;
+            transform: translateY(-50%);
+        }
+        .new-digit {
+            position: absolute;
+            top: -0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #1d4ed8;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .btn {
+    padding: 12px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Color Variants */
+.btn-green { background-color: #22c55e; }
+.btn-green:hover { background-color: #16a34a; }
+
+.btn-blue { background-color: #3b82f6; }
+.btn-blue:hover { background-color: #2563eb; }
+
+.btn-yellow { background-color: #eab308; color: #111; }
+.btn-yellow:hover { background-color: #ca8a04; }
+
+.btn-purple { background-color: #8b5cf6; }
+.btn-purple:hover { background-color: #7c3aed; }
+
+.btn-gray { background-color: #6b7280; }
+.btn-gray:hover { background-color: #4b5563; }
+
+.btn-back { 
+    background-color: #4CAF50; 
+    text-decoration: none; 
+    display: inline-block; 
+    padding: 10px 15px; 
+    border-radius: 5px;
+}
+.btn-back:hover { background-color: #45a049; }
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .action-buttons-wrapper { flex-direction: column; gap: 12px; }
+    .buttons { justify-content: center; }
+    .back-btn { text-align: center; }
+}
+    </style>
+</head>
+<body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl max-w-4xl w-full text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-blue-700 mb-2">Math Whiz</h1>
+        <p class="text-gray-600 mb-8" id="instruction-text">Let's practice some addition and subtraction! Pay attention to the carry and borrow spots.</p>
+        
+        <!-- Custom Problem Section -->
+        <div id="custom-problem-area" class="flex flex-col items-center justify-center gap-4 mb-8 hidden">
+            <h2 class="text-xl font-bold text-gray-700">Create Your Own Problem</h2>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <input type="number" id="custom-num1" placeholder="First Number" class="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+                <select id="custom-operator" class="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="+">+</option>
+                    <option value="-">-</option>
+                </select>
+                <input type="number" id="custom-num2" placeholder="Second Number" class="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+            </div>
+            <button id="create-custom-problem" class="px-6 py-3 bg-purple-500 text-white font-bold rounded-lg shadow-md hover:bg-purple-600 transition-colors w-full sm:w-auto">Create Problem</button>
+        </div>
+
+
+        <!-- Problem Display Area - The whole layout is a single grid -->
+        <div id="problem-area" class="grid gap-2 items-center justify-center mx-auto">
+            <!-- Content will be generated by JavaScript -->
+        </div>
+
+        <!-- Action Buttons and Feedback -->
+       <div class="action-buttons-wrapper mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+
+    <!-- Main Action Buttons -->
+    <div class="buttons flex flex-wrap gap-4 justify-center">
+        <button id="check-answer" class="btn btn-green">Check Answer</button>
+        <button id="new-problem" class="btn btn-blue">New Problem</button>
+        <button id="tutor-mode" class="btn btn-yellow">Tutor</button>
+        <button id="next-step" class="btn btn-purple hidden">Next Step</button>
+        <button id="toggle-custom-input" class="btn btn-gray">Custom Problem</button>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-btn w-full mt-4 text-left">
+        <a href="index.html" class="btn btn-back">
+            &larr; Back to Home
+        </a>
+    </div>
+</div>
+        </div>
+
+        <!-- Feedback Message Box -->
+        <div id="overlay" class="overlay"></div>
+        <div id="feedback-box" class="feedback-box bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center border-t-8 border-blue-500">
+            <h3 id="feedback-title" class="text-2xl font-bold mb-2 text-blue-700"></h3>
+            <p id="feedback-message" class="text-gray-600 mb-4"></p>
+            <button id="close-feedback" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Got it!</button>
+        </div>
+<!-- Default Back Button -->
+
+
+    </div>
+
+    <script>
+        // DOM elements
+        const problemAreaEl = document.getElementById('problem-area');
+        const checkAnswerBtn = document.getElementById('check-answer');
+        const newProblemBtn = document.getElementById('new-problem');
+        const tutorModeBtn = document.getElementById('tutor-mode');
+        const nextStepBtn = document.getElementById('next-step');
+        const instructionText = document.getElementById('instruction-text');
+        const feedbackBox = document.getElementById('feedback-box');
+        const overlay = document.getElementById('overlay');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const closeFeedbackBtn = document.getElementById('close-feedback');
+        const customProblemArea = document.getElementById('custom-problem-area');
+        const toggleCustomInputBtn = document.getElementById('toggle-custom-input');
+        const createCustomProblemBtn = document.getElementById('create-custom-problem');
+        const customNum1Input = document.getElementById('custom-num1');
+        const customNum2Input = document.getElementById('custom-num2');
+        const customOperatorSelect = document.getElementById('custom-operator');
+
+
+        let problem = {};
+        let currentStep = 0;
+        let isTutorMode = false;
+
+        // Generate a random number with a given number of digits
+        function getRandomNumber(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Generate a new math problem
+        function generateProblem(custom = false) {
+            let num1, num2, isAddition;
+
+            if (custom) {
+                num1 = parseInt(customNum1Input.value, 10);
+                num2 = parseInt(customNum2Input.value, 10);
+                const operator = customOperatorSelect.value;
+                isAddition = operator === '+';
+
+                if (isNaN(num1) || isNaN(num2)) {
+                    showFeedback('Invalid Input', 'Please enter valid numbers.');
+                    return;
+                }
+            } else {
+                const numDigits = Math.floor(Math.random() * 3) + 4; // 4, 5, or 6 digits
+                isAddition = Math.random() < 0.5;
+                num1 = getRandomNumber(numDigits);
+                num2 = getRandomNumber(numDigits);
+            }
+
+            if (!isAddition) {
+                // Ensure num1 is always greater than num2 for subtraction
+                if (num1 < num2) {
+                    [num1, num2] = [num2, num1]; // Swap if necessary
+                }
+            }
+
+            problem.num1 = String(num1);
+            problem.num2 = String(num2);
+            problem.operator = isAddition ? '+' : '-';
+            problem.answer = isAddition ? num1 + num2 : num1 - num2;
+            problem.numDigits = Math.max(problem.num1.length, problem.num2.length);
+            problem.answerDigits = problem.answer.toString().length;
+            
+            // Pre-calculate steps for tutor mode
+            problem.steps = calculateSteps(problem);
+
+            isTutorMode = false;
+            currentStep = 0;
+            renderProblem();
+            showButtons();
+        }
+
+        // Calculates the steps for the tutor mode in the correct right-to-left order
+        function calculateSteps(p) {
+            const steps = [];
+            const num1Arr = p.num1.split('').reverse().map(Number);
+            const num2Arr = p.num2.split('').reverse().map(Number);
+            const maxDigits = Math.max(p.num1.length, p.num2.length);
+
+            let carry = 0;
+            for (let i = 0; i < maxDigits; i++) {
+                const digit1 = num1Arr[i] || 0;
+                const digit2 = num2Arr[i] || 0;
+                let step = {
+                    index: i,
+                    resultDigit: null,
+                    carryDigit: null,
+                    borrow: null,
+                    originalValue: null,
+                    newValue: null,
+                    explanation: ''
+                };
+
+                if (p.operator === '+') {
+                    const sum = digit1 + digit2 + carry;
+                    step.resultDigit = sum % 10;
+                    step.carryDigit = Math.floor(sum / 10);
+                    step.explanation = `Let's add the digits in the ${getPlaceValue(i)} place: ${digit1} + ${digit2}. The sum is ${digit1 + digit2}. Add the carry of ${carry}, which makes it ${sum}. The last digit, ${step.resultDigit}, goes in the answer row. We carry over the ${step.carryDigit}.`;
+                    carry = step.carryDigit;
+                } else { // Subtraction
+                    let val1 = digit1 - carry;
+                    step.borrow = false;
+
+                    if (val1 < digit2) {
+                        step.borrow = true;
+                        step.originalValue = digit1;
+                        val1 += 10;
+                        step.newValue = val1;
+                        carry = 1;
+                        step.explanation = `In the ${getPlaceValue(i)} place, we need to subtract ${digit2} from ${digit1}. But ${digit1} is smaller! So we must borrow from the next column. Now ${digit1} becomes ${val1}. We put a borrow of 1 on top of the next digit.`;
+                    } else {
+                        carry = 0;
+                        step.explanation = `In the ${getPlaceValue(i)} place, we subtract ${digit2} from ${digit1}. The answer is ${val1}.`;
+                    }
+                    step.resultDigit = val1 - digit2;
+                }
+                steps.push(step);
+            }
+            return steps; // Keep in right-to-left order
+        }
+        
+        function getPlaceValue(index) {
+            const places = ['Ones', 'Tens', 'Hundreds', 'Thousands', 'Ten Thousands', 'Hundred Thousands', 'Millions'];
+            return places[index] || '';
+        }
+
+
+        // Render the problem on the UI
+        function renderProblem() {
+            const digits = problem.numDigits;
+            const placeValueLabels = ['O', 'T', 'H', 'Th', 'TTh', 'HTh', 'M'];
+            
+            problemAreaEl.innerHTML = '';
+            
+            const num1Padded = problem.num1.padStart(digits, '0');
+            const num2Padded = problem.num2.padStart(digits, '0');
+            
+            const numGridCols = Math.max(digits, problem.answerDigits) + 1;
+            const gridColsStyle = `grid-template-columns: 2rem repeat(${numGridCols - 1}, 3rem);`;
+            problemAreaEl.style.cssText = gridColsStyle;
+
+            // --- Place Value Labels Row ---
+            problemAreaEl.appendChild(document.createElement('div'));
+            for (let i = numGridCols - 2; i >= 0; i--) {
+                const label = document.createElement('div');
+                label.className = 'digit-cell text-xs bg-transparent text-gray-500 font-bold';
+                label.textContent = placeValueLabels[i] || '';
+                problemAreaEl.appendChild(label);
+            }
+
+            // --- Carry/Borrow Row ---
+            problemAreaEl.appendChild(document.createElement('div'));
+            const numCarryBorrowCols = numGridCols - 1;
+            for (let i = 0; i < numCarryBorrowCols; i++) {
+                const inputWrapper = document.createElement('div');
+                inputWrapper.className = 'flex justify-center items-center';
+                const input = document.createElement('input');
+                input.className = 'carry-borrow-input user-input text-center';
+                input.type = 'tel';
+                input.maxLength = 1;
+                input.dataset.col = numCarryBorrowCols - 1 - i;
+                inputWrapper.appendChild(input);
+                problemAreaEl.appendChild(inputWrapper);
+            }
+
+            // --- First Number Row with Operator ---
+            const operatorCell = document.createElement('div');
+            operatorCell.className = 'text-4xl font-bold text-gray-700 flex items-center justify-center';
+            operatorCell.textContent = problem.operator;
+            problemAreaEl.appendChild(operatorCell);
+
+            const numLeadingOperand1 = numGridCols - 1 - problem.num1.length;
+            for(let i = 0; i < numLeadingOperand1; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'digit-cell bg-transparent';
+                problemAreaEl.appendChild(emptyCell);
+            }
+
+            for (let i = 0; i < digits; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'digit-cell bg-blue-100';
+                cell.textContent = num1Padded[i];
+                cell.dataset.col = numLeadingOperand1 + i;
+                problemAreaEl.appendChild(cell);
+            }
+
+            // --- Second Number Row ---
+            problemAreaEl.appendChild(document.createElement('div'));
+            const numLeadingOperand2 = numGridCols - 1 - problem.num2.length;
+            for(let i = 0; i < numLeadingOperand2; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'digit-cell bg-transparent';
+                problemAreaEl.appendChild(emptyCell);
+            }
+            for (let i = 0; i < digits; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'digit-cell bg-purple-100';
+                cell.textContent = num2Padded[i];
+                cell.dataset.col = numLeadingOperand2 + i;
+                problemAreaEl.appendChild(cell);
+            }
+
+            // --- Separator Line ---
+            const separatorDiv = document.createElement('div');
+            separatorDiv.className = 'w-full h-1 bg-gray-300 rounded-full my-2 col-span-full';
+            problemAreaEl.appendChild(separatorDiv);
+
+            // --- Result Row ---
+            problemAreaEl.appendChild(document.createElement('div'));
+            for (let i = 0; i < numGridCols - 1; i++) {
+                const input = document.createElement('input');
+                input.className = 'digit-cell user-input';
+                input.type = 'tel';
+                input.maxLength = 1;
+                input.dataset.col = numGridCols - 2 - i;
+                problemAreaEl.appendChild(input);
+            }
+        }
+
+        // Event listeners
+        checkAnswerBtn.addEventListener('click', () => {
+            if (isTutorMode) return;
+            const inputs = problemAreaEl.querySelectorAll('.digit-cell.user-input');
+            let userAnswer = '';
+            inputs.forEach(input => {
+                userAnswer += input.value;
+            });
+            
+            const isCorrect = parseInt(userAnswer) === problem.answer;
+            
+            if (isCorrect) {
+                showFeedback('Great Job!', 'You got it right! You are a Math Whiz!');
+            } else {
+                showFeedback('Oops, not quite.', 'Keep trying! Check your work and try again.');
+            }
+        });
+
+        newProblemBtn.addEventListener('click', () => generateProblem());
+        createCustomProblemBtn.addEventListener('click', () => generateProblem(true));
+
+        tutorModeBtn.addEventListener('click', () => {
+            isTutorMode = true;
+            currentStep = 0;
+            nextStepBtn.classList.remove('hidden');
+            checkAnswerBtn.classList.add('hidden');
+            tutorModeBtn.classList.add('hidden');
+            instructionText.textContent = "I'll guide you step-by-step. Click 'Next Step' to begin!";
+            
+            // Clear result and carry/borrow inputs
+            const inputs = problemAreaEl.querySelectorAll('.user-input');
+            inputs.forEach(input => input.value = '');
+        });
+
+        nextStepBtn.addEventListener('click', () => {
+            if (currentStep < problem.steps.length) {
+                const step = problem.steps[currentStep];
+                tutorStep(step);
+                currentStep++;
+            } else {
+                instructionText.textContent = "Great job! You've completed the problem with my help!";
+                nextStepBtn.classList.add('hidden');
+                tutorModeBtn.classList.remove('hidden');
+                checkAnswerBtn.classList.remove('hidden');
+                isTutorMode = false;
+            }
+        });
+
+        toggleCustomInputBtn.addEventListener('click', () => {
+            customProblemArea.classList.toggle('hidden');
+        });
+
+        // The core logic for tutor mode, now processes from right to left
+        function tutorStep(step) {
+            instructionText.textContent = step.explanation;
+            
+            // The column index in the UI for the current digit we're working on
+            const resultColIndex = step.index;
+
+            // Handle addition
+            if (problem.operator === '+') {
+                const carryColIndex = step.index + 1;
+                
+                if (step.carryDigit > 0) {
+                    const sourceEl = document.querySelector(`.digit-cell[data-col='${problem.numDigits - 1 - step.index}']`);
+                    const destEl = document.querySelector(`.carry-borrow-input[data-col='${carryColIndex}']`);
+                    
+                    if(sourceEl && destEl) {
+                        const flyingDigit = document.createElement('div');
+                        flyingDigit.className = 'flying-digit';
+                        flyingDigit.textContent = step.carryDigit;
+                        problemAreaEl.appendChild(flyingDigit);
+
+                        const sourceRect = sourceEl.getBoundingClientRect();
+                        const destRect = destEl.getBoundingClientRect();
+                        const containerRect = problemAreaEl.getBoundingClientRect();
+
+                        flyingDigit.style.left = `${sourceRect.left - containerRect.left + sourceRect.width / 2}px`;
+                        flyingDigit.style.top = `${sourceRect.top - containerRect.top + sourceRect.height / 2}px`;
+
+                        setTimeout(() => {
+                            const targetX = (destRect.left - containerRect.left) + (destRect.width / 2) - (flyingDigit.offsetWidth / 2);
+                            const targetY = (destRect.top - containerRect.top) + (destRect.height / 2) - (flyingDigit.offsetHeight / 2);
+                            flyingDigit.style.transform = `translate(${targetX - (sourceRect.left - containerRect.left)}px, ${targetY - (sourceRect.top - containerRect.top)}px)`;
+                            flyingDigit.style.opacity = '1';
+                        }, 50);
+
+                        setTimeout(() => {
+                            destEl.value = step.carryDigit;
+                            flyingDigit.remove();
+                        }, 1000); // Duration of the animation
+                    }
+                }
+                const resultInput = document.querySelector(`.digit-cell.user-input[data-col='${resultColIndex}']`);
+                if (resultInput) {
+                    resultInput.value = step.resultDigit;
+                }
+            } else { // Subtraction
+                if (step.borrow) {
+                    const originalDigitEl = document.querySelector(`.digit-cell[data-col='${problem.numDigits - 1 - step.index}']`);
+                    if (originalDigitEl) {
+                        originalDigitEl.style.position = 'relative';
+                        originalDigitEl.style.overflow = 'visible';
+                        
+                        // Strikethrough effect
+                        const strikeEl = document.createElement('div');
+                        strikeEl.className = 'strikethrough-digit';
+                        const lineEl = document.createElement('div');
+                        lineEl.className = 'strikethrough';
+                        strikeEl.appendChild(lineEl);
+                        originalDigitEl.appendChild(strikeEl);
+
+                        // New digit
+                        const newDigitEl = document.createElement('div');
+                        newDigitEl.className = 'new-digit';
+                        newDigitEl.textContent = step.newValue;
+                        originalDigitEl.appendChild(newDigitEl);
+                        
+                        setTimeout(() => {
+                            newDigitEl.style.opacity = '1';
+                            newDigitEl.style.transform = 'translateY(0)';
+                        }, 500);
+                    }
+                }
+                const resultInput = document.querySelector(`.digit-cell.user-input[data-col='${resultColIndex}']`);
+                if (resultInput) {
+                    resultInput.value = step.resultDigit;
+                }
+            }
+        }
+
+        // Show a custom feedback message box
+        function showFeedback(title, message) {
+            feedbackTitle.textContent = title;
+            feedbackMessage.textContent = message;
+            overlay.style.display = 'block';
+            feedbackBox.style.display = 'block';
+        }
+
+        // Close the feedback message box
+        closeFeedbackBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            feedbackBox.style.display = 'none';
+        });
+
+        // Add a listener to handle the user inputs for the result and carry/borrow
+        problemAreaEl.addEventListener('input', (e) => {
+            const input = e.target;
+            if (input.classList.contains('user-input')) {
+                const value = input.value;
+                if (value.length > 1) {
+                    input.value = value.charAt(0);
+                }
+            }
+        });
+
+        // Show/Hide buttons based on mode
+        function showButtons() {
+            if (isTutorMode) {
+                checkAnswerBtn.classList.add('hidden');
+                tutorModeBtn.classList.add('hidden');
+                nextStepBtn.classList.remove('hidden');
+            } else {
+                checkAnswerBtn.classList.remove('hidden');
+                tutorModeBtn.classList.remove('hidden');
+                nextStepBtn.classList.add('hidden');
+            }
+        }
+
+        // Initialize the app
+        generateProblem();
+    </script>
+</body>
+</html>
